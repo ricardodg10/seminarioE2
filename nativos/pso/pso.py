@@ -123,7 +123,7 @@ def funcion_objetivo(posicion):
 
 if __name__ == "__main__":
     # para inicializar PSO con valores dados
-    pso = PSO(funcion_objetivo, num_particulas=5, dimension=2, lower_bound=-10, upper_bound=10, max_iter=100)
+    pso = PSO(funcion_objetivo, num_particulas=5, dimension=2, lower_bound=-10, upper_bound=10, max_iter=10)
 
     # ejecutar la optimizacion y obtener la mejor solución (vector posicion y valor de la solucion)
     g_best, g_best_valor, tiempo_inicial = pso.optimizar()
