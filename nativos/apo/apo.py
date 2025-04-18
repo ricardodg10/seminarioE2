@@ -79,9 +79,13 @@ class APO:
                     S = math.tan((random.random() - 0.5) * math.pi)                         # coeficiente de velocidad
                     Z_i = [y * S for y in Y_i]                                              # nueva posición luego de la fase aérea
 
+                    # ajustar limites
+                    Y_i = self.ajustar_limites(Y_i)
+                    Z_i = self.ajustar_limites(Z_i)
+
                     # unión de las soluciones
-                    posiciones_candidatas.append((self.ajustar_limites(Y_i), self.funcion_objetivo(Y_i)))
-                    posiciones_candidatas.append((self.ajustar_limites(Z_i), self.funcion_objetivo(Y_i)))
+                    posiciones_candidatas.append((Y_i, self.funcion_objetivo(Y_i)))
+                    posiciones_candidatas.append((Z_i, self.funcion_objetivo(Z_i)))
             
             # Fase subacuática (explotación local)
             else:  
@@ -117,10 +121,15 @@ class APO:
                         beta = random.uniform(0, 1)
                         Z_i = [x_r1_2 + beta * (x_r1_2 - x_r2_2) for x_r1_2, x_r2_2 in zip(X_r1_2, X_r2_2)]                     # nueva posición luego de evadir depredadores
 
+                    # ajustar limites
+                    Y_i = self.ajustar_limites(Y_i)
+                    Z_i = self.ajustar_limites(Z_i)
+                    W_i = self.ajustar_limites(W_i)
+
                     # union de las soluciones
-                    posiciones_candidatas.append((self.ajustar_limites(W_i), self.funcion_objetivo(W_i)))
-                    posiciones_candidatas.append((self.ajustar_limites(Y_i), self.funcion_objetivo(Y_i)))
-                    posiciones_candidatas.append((self.ajustar_limites(Z_i), self.funcion_objetivo(Z_i)))
+                    posiciones_candidatas.append((W_i, self.funcion_objetivo(W_i)))
+                    posiciones_candidatas.append((Y_i, self.funcion_objetivo(Y_i)))
+                    posiciones_candidatas.append((Z_i, self.funcion_objetivo(Z_i)))
             
             # se ordenan las soluciones desde el menor al mayor fitness
             posiciones_candidatas.sort(key=lambda x: x[1])
