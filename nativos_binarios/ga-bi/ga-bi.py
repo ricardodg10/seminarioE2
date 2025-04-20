@@ -157,10 +157,11 @@ class GA:
 
 
 if __name__ == "__main__":
-    cantidad_vertices = leer_vertices("C:\\Users\\ricar\\OneDrive\\Escritorio\\seminario\\benchmark\\C125-9.mtx")  # Asegúrate de tener la ruta correcta
-    aristas = leer_aristas("C:\\Users\\ricar\\OneDrive\\Escritorio\\seminario\\benchmark\\C125-9.mtx")  # Asegúrate de tener la ruta correcta
+    ruta_archivo = "C:/Users/ricar/OneDrive/Escritorio/seminario/benchmark/C125-9.mtx"
+    cantidad_vertices = leer_vertices(ruta_archivo)  
+    aristas = leer_aristas(ruta_archivo)  
 
-    tamanio_poblacion = 1
+    tamanio_poblacion = 5
     longitud_cromosoma = cantidad_vertices  # Número de vértices
     max_iteraciones = 100
     prob_cruce = 0.8

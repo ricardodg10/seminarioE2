@@ -2,7 +2,7 @@ import random       # para las variables aleatorias del algoritmo
 import time         # para medir el tiempo de ejecución
 import math         # para funciones matemáticas como logaritmo y tangente
 
-# función lévy flight para saltos aleatorios en el espacio de búsqueda
+# función Lévy Flight para saltos aleatorios en el espacio de búsqueda
 def levy_flight(dimension):
     beta = 1.5 # 0 < beta <= 2
 
