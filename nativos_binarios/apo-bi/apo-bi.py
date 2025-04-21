@@ -51,7 +51,7 @@ def binarizar_sigmoide(v):
 def funcion_objetivo(solucion):
     return sum(solucion)
 
-# verificación y reparación de soluciones (estilo GA)
+# verificación y reparación de soluciones 
 def reparar_solucion(solucion, aristas):
     for v1, v2 in aristas:
         if solucion[v1 - 1] == 0 and solucion[v2 - 1] == 0:
@@ -67,7 +67,6 @@ class Puffin:
         self.dimension = dimension  # dimensión del problema
         self.lower_bound = LB       # límite inferior de posición
         self.upper_bound = UB       # límite superior de posición
-        self.aristas = aristas
 
         # posición inicial aleatoria 
         self.posicion_real = [random.uniform(LB, UB) for _ in range(dimension)]
@@ -237,7 +236,7 @@ class APO:
 # ejecución principal
 if __name__ == "__main__":
 
-    benchmark_var = 2
+    benchmark_var = 3   
 
     if(benchmark_var==1):
         ruta_archivo = "C:/Users/ricar/OneDrive/Escritorio/seminario/benchmark/C125-9.mtx"
