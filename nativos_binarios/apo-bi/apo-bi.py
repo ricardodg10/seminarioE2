@@ -1,6 +1,7 @@
-import random       # para las variables aleatorias del algoritmo
-import time         # para medir el tiempo de ejecución
-import math         # para funciones matemáticas como logaritmo y tangente
+import random
+import time
+import math
+import matplotlib.pyplot as plt  
 
 '''Funciones de lectura'''
 
@@ -66,6 +67,7 @@ class Puffin:
         self.dimension = dimension  # dimensión del problema
         self.lower_bound = LB       # límite inferior de posición
         self.upper_bound = UB       # límite superior de posición
+        self.aristas = aristas
 
         # posición inicial aleatoria 
         self.posicion_real = [random.uniform(LB, UB) for _ in range(dimension)]
@@ -107,7 +109,8 @@ class Puffin:
         else:
             return [x1 + beta * (x1 - x2) for x1, x2 in zip(X_r1, X_r2)]
 
-# clase de algoritmo APO (versión binaria con ambas fases)
+
+'''Clase del algoritmo APO (Arctic Puffin Optimization)'''
 class APO:
     def __init__(self, funcion_objetivo, num_puffins, dimension, lower_bound, upper_bound, max_iter):
         self.funcion_objetivo = funcion_objetivo    # función a minimizar
@@ -122,6 +125,9 @@ class APO:
         self.g_best_binario = [0] * dimension
         self.g_best_real = [0] * dimension
         self.mejor_valor = float('inf')
+        self.iteracion_mejor = None                 # Para almacenar la iteración cuando se encontró el mejor g_best
+        self.tiempo_mejor = None                    # Para almacenar el tiempo cuando se encontró el mejor g_best
+        self.historial_convergencia = []            # Para almacenar los valores de la función objetivo en cada iteración
 
     def ajustar_limites(self, posicion):
         return [max(self.lower_bound, min(x, self.upper_bound)) for x in posicion]
@@ -161,13 +167,14 @@ class APO:
 
             else:  # fase subacuática
                 for i in range(self.num_puffins):
-                    r1, r2, r3 = random.sample([j for j in range(self.num_puffins) if j != i], 3)
-                    X_r1, X_r2, X_r3 = self.poblacion[r1].posicion_real, self.poblacion[r2].posicion_real, self.poblacion[r3].posicion_real
+                    r2, r3 = random.sample([j for j in range(self.num_puffins) if j != i], 2)
+                    X_r2 = self.poblacion[r2].posicion_real
+                    X_r3 = self.poblacion[r3].posicion_real
                     F = 0.5
-                    L1 = levy_flight(self.dimension)
-                    
+
                     # recolección de comida
                     if random.random() >= 0.5:
+                        L1 = levy_flight(self.dimension)
                         W = self.poblacion[i].recoleccion(X_r2, X_r3, F, L1)
                     else:
                         W = self.poblacion[i].recoleccion(X_r2, X_r3, F)
@@ -183,11 +190,9 @@ class APO:
                     if random.random() >= 0.5:
                         L2 = levy_flight(self.dimension)
                         Z = self.poblacion[i].evadir_agua(X_r4, X_r5, L=L2)
-                        #Z = [x1 + F * l2 * (x1 - x2) for x1, x2, l2 in zip(X_r4, X_r5, L2)]
                     else:
                         beta = random.uniform(0, 1)
                         Z = self.poblacion[i].evadir_agua(X_r4, X_r5, beta=beta)
-                        #Z = [x1 + beta * (x1 - x2) for x1, x2 in zip(X_r4, X_r5)]
 
                     W = self.ajustar_limites(W)
                     Y = self.ajustar_limites(Y)
@@ -216,10 +221,17 @@ class APO:
                     self.mejor_valor = valor
                     self.g_best_binario = puffin.posicion_binaria[:]
                     self.g_best_real = puffin.posicion_real[:]
+                    
+                    self.iteracion_mejor = t
+                    self.tiempo_mejor = time.time() - tiempo_inicio
 
-            print(f"Iteración {t} - Vértices cubiertos: {sum(self.g_best_binario)}")
+            self.historial_convergencia.append(self.mejor_valor)
+
+            # Imprimir la iteración y el resultado de la mejor solución encontrada (g_best)
+            print(f"Iteración {t} - Vértices cubiertos (g_best): {sum(self.g_best_binario)}")
 
         tiempo_total = time.time() - tiempo_inicio
+
         return self.g_best_binario, self.mejor_valor, tiempo_total
 
 # ejecución principal
@@ -236,7 +248,18 @@ if __name__ == "__main__":
 
     mejor_sol, mejor_val, tiempo = apo.optimizar(aristas)
 
-    print("\nMejor solución encontrada (binaria):", mejor_sol)
+    # Output final
+    print("\nMejor solución encontrada:", mejor_sol)
     print("Vértices seleccionados:", [i + 1 for i, v in enumerate(mejor_sol) if v == 1])
-    print("Valor de la función objetivo:", mejor_val)
-    print("Tiempo de ejecución:", tiempo, "[s]")
+    print("Cobertura de vértices:", funcion_objetivo(mejor_sol), '\n')
+
+    print(f"Mejor solución encontrada en iteración {apo.iteracion_mejor}\nMejor solución encontrada en el tiempo: {apo.tiempo_mejor} [s]")
+
+    print("\nTiempo de ejecución total:", tiempo, "[s]\n")
+
+    # Grafica de convergencia
+    plt.plot(apo.historial_convergencia)
+    plt.title('Convergencia del algoritmo APO')
+    plt.xlabel('Iteraciones')
+    plt.ylabel('Valor de la función objetivo')
+    plt.show()

@@ -1,5 +1,6 @@
 import random
 import time
+import matplotlib.pyplot as plt  
 
 # función para leer el número de vértices del archivo .mtx
 def leer_vertices(mtx_file):
@@ -18,6 +19,21 @@ def leer_aristas(mtx_file):
             aristas.append((v1, v2))  # Pareja de vértices (arista)
     return aristas
 
+def funcion_objetivo(solucion):
+    return sum(solucion) # retorna la suma de los vértices cubiertos → 1's en array "solucion"
+
+def reparar(cromosoma, aristas):
+        """Funcion que verifica si la solución cubre todas las aristas del grafo (Vertex Cover), y la repara de ser necesario"""
+
+        # Itera sobre cada arista
+        for v1, v2 in aristas:
+            # Si ambos vértices están sin cubrir
+            if (cromosoma.solucion[v1-1] == 0 and cromosoma.solucion[v2-1] == 0):
+                # Elegir aleatoriamente entre v1 y v2 para cubrirlo
+                vertice_a_cubrir = random.choice([v1])
+                # Poner un 1 en el vértice elegido
+                cromosoma.solucion[vertice_a_cubrir-1] = 1
+
 # Clase cromosoma
 class Cromosoma:
     def __init__(self, longitud_cromosoma=None, solucion=None):
@@ -27,11 +43,7 @@ class Cromosoma:
         else:
             self.solucion = solucion
 
-        self.vertices_cubiertos = self.calcular_fitness()
-
-    def calcular_fitness(self):
-        return sum(self.solucion) # retorna la suma de los vértices cubiertos → 1's en array "solucion"
-
+        self.valor = funcion_objetivo(self.solucion)
 
 # Clase del algoritmo genético
 class GA:
@@ -45,8 +57,11 @@ class GA:
         self.num_vertices = num_vertices 
         self.poblacion = self.generar_poblacion_inicial()
 
-        self.iteraciones = [] # [iteracion, mejor_solucion]
+        self.historial_convergencia = []    # Para almacenar los valores de la función objetivo en cada iteración
+
         self.mejor_cromosoma = None
+        self.iteracion_mejor = 1         
+        self.tiempo_mejor = None            
 
     def generar_poblacion_inicial(self):
         """Genera la población inicial, asegurando que todas las soluciones son factibles"""
@@ -57,34 +72,22 @@ class GA:
         while(cromosomas < self.tamanio_poblacion):
             c = Cromosoma(longitud_cromosoma=self.longitud_cromosoma)
 
-            self.verificacionVertexCover(c, self.aristas)
+            reparar(c, self.aristas)
 
             poblacion.append(c)
             cromosomas = cromosomas+1
 
         return poblacion
-    
-    def verificacionVertexCover(self, cromosoma, aristas):
-        """Funcion que verifica si la solución cubre todas las aristas del grafo (Vertex Cover), y la repara de ser necesario"""
-
-        # Itera sobre cada arista
-        for v1, v2 in aristas:
-            # Si ambos vértices están sin cubrir
-            if (cromosoma.solucion[v1-1] == 0 and cromosoma.solucion[v2-1] == 0):
-                # Elegir aleatoriamente entre v1 y v2 para cubrirlo
-                vertice_a_cubrir = random.choice([v1])
-                # Poner un 1 en el vértice elegido
-                cromosoma.solucion[vertice_a_cubrir-1] = 1
 
     def mejorCromosoma(self, poblacion):
-        min_fitness = min(cromosoma.calcular_fitness() for cromosoma in poblacion) # se rescata el fitness mínimo de la población
-        mejores_cromosomas = [cromosoma for cromosoma in poblacion if cromosoma.calcular_fitness() == min_fitness] # se eligen los cromosomas con el fitness mínimo
+        min_fitness = min(funcion_objetivo(cromosoma.solucion) for cromosoma in poblacion) # se rescata el fitness mínimo de la población
+        mejores_cromosomas = [cromosoma for cromosoma in poblacion if funcion_objetivo(cromosoma.solucion) == min_fitness] # se eligen los cromosomas con el fitness mínimo
         return random.choice(mejores_cromosomas) # si hay más de un cromosoma con el mismo fitness, se elige uno de forma aleatoria
 
     def seleccion_por_ruleta(self):
         '''Cromosomas padres son escogidos en función de su probabilidad proporcional a su fitness'''
-        total_fitness = sum(cromosoma.calcular_fitness() for cromosoma in self.poblacion) # suma de fitness de todos los cromosomas
-        probabilidad = [cromosoma.calcular_fitness() / total_fitness for cromosoma in self.poblacion] # calcular probabilidades de selección
+        total_fitness = sum(funcion_objetivo(cromosoma.solucion) for cromosoma in self.poblacion) # suma de fitness de todos los cromosomas
+        probabilidad = [funcion_objetivo(cromosoma.solucion) / total_fitness for cromosoma in self.poblacion] # calcular probabilidades de selección
         seleccionados = random.choices(self.poblacion, weights=probabilidad, k=2) # selección basada en su probabilidad
         return seleccionados # retorna los padres de la nueva poblacion 
     
@@ -94,8 +97,8 @@ class GA:
         hijo1 = Cromosoma(solucion=cromosoma1.solucion[:indice_aleatorio] + cromosoma2.solucion[indice_aleatorio:])
         hijo2 = Cromosoma(solucion=cromosoma2.solucion[:indice_aleatorio] + cromosoma1.solucion[indice_aleatorio:])
         # se verifica si las soluciones son factibles en contexto de Cobertura de Vértices y las repara si es necesario
-        self.verificacionVertexCover(hijo1, self.aristas)
-        self.verificacionVertexCover(hijo2, self.aristas)
+        reparar(hijo1, self.aristas)
+        reparar(hijo2, self.aristas)
         return hijo1, hijo2
     
     def mutacion(self):
@@ -107,24 +110,23 @@ class GA:
         for cromosoma in self.poblacion:
             cromosoma.solucion[punto1-1] = 1 if cromosoma.solucion[punto1-1] == 0 else 0
             cromosoma.solucion[punto2-1] = 1 if cromosoma.solucion[punto2-1] == 0 else 0
-            self.verificacionVertexCover(cromosoma, self.aristas) # se verifica si la solucion nueva por mutacion es una cobertura de vértices, y la repara de ser necesario
+            reparar(cromosoma, self.aristas) # se verifica si la solucion nueva por mutacion es una cobertura de vértices, y la repara de ser necesario
 
     def evolucionar(self):
 
+        print("\nEjecución GA\n")
+
         self.mejor_cromosoma = self.mejorCromosoma(self.poblacion) # se define el mejor cromosoma de la población inicial
-        
-        # resultado inicial
-        print("\n--- RESULTADO INICIAL ---")
-        print("→ Mejor solución:\n", self.mejor_cromosoma.solucion)
-        print("→ Cobertura (vértices):", self.mejor_cromosoma.calcular_fitness())
-        print("→ Vértices seleccionados:\n", [i + 1 for i, v in enumerate(self.mejor_cromosoma.solucion) if v == 1], "\n")
 
         nueva_poblacion = []
 
-        print("--- ITERACIONES ---")
+        tiempo_inicio = time.time()
+        self.tiempo_mejor = time.time() - tiempo_inicio
 
-        for i in range(1, self.max_iteraciones+1):
+        for t in range(1, self.max_iteraciones+1):
             # seleccion de cromosomas que dará la siguiente población (de sus hijos)
+
+        
             padres = self.seleccion_por_ruleta()
 
             # cruce (cruce de un punto)
@@ -144,22 +146,28 @@ class GA:
 
             # guardar mejor cromosoma
             nuevo_mejor = self.mejorCromosoma(self.poblacion)
-            if(nuevo_mejor.calcular_fitness() < self.mejor_cromosoma.calcular_fitness()):
+            if(funcion_objetivo(nuevo_mejor.solucion) < funcion_objetivo(self.mejor_cromosoma.solucion)):
                 self.mejor_cromosoma = Cromosoma(solucion=nuevo_mejor.solucion[:])  # copia del nuevo mejor cromosoma
 
-            print(f'Iteración: {i} - Fitness global (vértices cubiertos): {self.mejor_cromosoma.calcular_fitness()}')
+                self.iteracion_mejor = t
+                self.tiempo_mejor = time.time() - tiempo_inicio
 
-        # Resultado final
-        print("\n--- RESULTADO FINAL ---")
-        print("→ Mejor solución:\n", self.mejor_cromosoma.solucion)
-        print("→ Cobertura (vértices):", self.mejor_cromosoma.calcular_fitness())
-        print("→ Vértices seleccionados:\n", [i + 1 for i, v in enumerate(self.mejor_cromosoma.solucion) if v == 1], "\n")
+            self.historial_convergencia.append(funcion_objetivo(self.mejor_cromosoma.solucion))  # Guardar el valor de la función objetivo
+            print(f"Iteración {t} - Vértices cubiertos (g_best) {funcion_objetivo(self.mejor_cromosoma.solucion)}")
+
+        tiempo_total = time.time() - tiempo_inicio
+        return self.mejor_cromosoma.solucion, funcion_objetivo(self.mejor_cromosoma.solucion), tiempo_total
 
 
 if __name__ == "__main__":
-    ruta_archivo = "C:/Users/ricar/OneDrive/Escritorio/seminario/benchmark/C125-9.mtx"
-    cantidad_vertices = leer_vertices(ruta_archivo)  
-    aristas = leer_aristas(ruta_archivo)  
+
+    # benchmarks
+    ruta_b1 = "C:/Users/ricar/OneDrive/Escritorio/seminario/benchmark/C125-9.mtx"
+    ruta_b2 = "C:/Users/ricar/OneDrive/Escritorio/seminario/benchmark/keller4.mtx"
+    ruta_b3 = "C:/Users/ricar/OneDrive/Escritorio/seminario/benchmark/keller5.mtx"
+
+    cantidad_vertices = leer_vertices(ruta_b3)  
+    aristas = leer_aristas(ruta_b3)  
 
     tamanio_poblacion = 5
     longitud_cromosoma = cantidad_vertices  # Número de vértices
@@ -168,4 +176,21 @@ if __name__ == "__main__":
     prob_mutacion = 0.07
 
     ga = GA(tamanio_poblacion, longitud_cromosoma, max_iteraciones, prob_cruce, prob_mutacion, aristas, cantidad_vertices)
-    ga.evolucionar()
+    mejor_sol, mejor_valor, tiempo = ga.evolucionar()
+
+    # Resultado final
+    print("\nMejor solución encontrada:", mejor_sol)
+    print("Vértices seleccionados:", [i + 1 for i, v in enumerate(mejor_sol) if v == 1])
+    print("Cobertura de vértices:", mejor_valor)
+
+    print(f"\nMejor solución encontrada en iteración {ga.iteracion_mejor} \nMejor solución encontrada en el tiempo: {ga.tiempo_mejor} segundos")
+
+    print("\nTiempo de ejecución total:", tiempo, "[s]\n")
+
+    # Mostrar la gráfica de convergencia
+    plt.plot(ga.historial_convergencia)
+    plt.title('Convergencia del algoritmo GA')
+    plt.xlabel('Iteraciones')
+    plt.ylabel('Valor de la función objetivo')
+    plt.show()
+

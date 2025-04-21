@@ -1,7 +1,9 @@
 import random
 import time
 import math
+import matplotlib.pyplot as plt  
 
+'''Funciones de lectura'''
 # función para leer el número de vértices del archivo .mtx
 def leer_vertices(mtx_file):
     with open(mtx_file, 'r') as file:
@@ -19,6 +21,7 @@ def leer_aristas(mtx_file):
             aristas.append((v1, v2))  # Pareja de vértices (arista)
     return aristas
 
+'''Función S-shape'''
 # función sigmoide
 def s1(v):
     return 1 / (1 + math.exp(-v))
@@ -43,12 +46,9 @@ class Particula:
         self.aristas = aristas
 
         self.reparar()
-        self.fitness = self.calcular_fitness()
+        self.fitness = funcion_objetivo(self.posicion)
         self.mejor_personal = self.posicion[:]
         self.mejor_fitness = self.fitness
-
-    def calcular_fitness(self):
-        return sum(self.posicion)  # cantidad de vértices cubiertos
 
     def reparar(self):
         for v1, v2 in self.aristas:
@@ -87,8 +87,14 @@ class PSO:
         self.poblacion = [Particula(dimension, LB, UB, aristas) for _ in range(num_particulas)]
         self.mejor_global = self.poblacion[0].posicion[:]
         self.mejor_valor = funcion_objetivo(self.mejor_global)
+        self.iteracion_mejor = None         
+        self.tiempo_mejor = None   
+
+        self.historial_convergencia = []         
 
     def optimizar(self):
+
+        print("\nEjecución PSO\n")
         tiempo_inicio = time.time()
 
         for t in range(1, self.max_iter + 1):
@@ -102,22 +108,30 @@ class PSO:
                 if valor < self.mejor_valor:
                     self.mejor_valor = valor
                     self.mejor_global = particula.posicion[:]
+                    
+                    self.iteracion_mejor = t
+                    self.tiempo_mejor = time.time() - tiempo_inicio
 
             for particula in self.poblacion:
                 particula.actualizar_velocidad(self.mejor_global, self.w, self.c1, self.c2)
                 particula.actualizar_posicion()
 
-            print(f"Iteración {t} - Vértices cubiertos (activos): {sum(self.mejor_global)}")
+            
+            self.historial_convergencia.append(self.mejor_valor)
+            print(f"Iteración {t} - Vértices cubiertos (g_best) {sum(self.mejor_global)}")
 
         tiempo_total = time.time() - tiempo_inicio
         return self.mejor_global, self.mejor_valor, tiempo_total
 
 
-# ------------------------- BLOQUE PRINCIPAL -------------------------
+'''Main'''
 if __name__ == "__main__":
-    archivo = "C:/Users/ricar/OneDrive/Escritorio/seminario/benchmark/C125-9.mtx"
-    num_vertices = leer_vertices(archivo)
-    aristas = leer_aristas(archivo)
+    ruta_b1 = "C:/Users/ricar/OneDrive/Escritorio/seminario/benchmark/C125-9.mtx"
+    ruta_b2 = "C:/Users/ricar/OneDrive/Escritorio/seminario/benchmark/keller4.mtx"
+    ruta_b3 = "C:/Users/ricar/OneDrive/Escritorio/seminario/benchmark/keller5.mtx"
+
+    num_vertices = leer_vertices(ruta_b3) 
+    aristas = leer_aristas(ruta_b3)
 
     tamanio_poblacion = 5
     lower_bound = -6
@@ -127,12 +141,23 @@ if __name__ == "__main__":
     c1 = 2
     c2 = 2
 
-    pso = PSO(funcion_objetivo, tamanio_poblacion, num_vertices,
-              lower_bound, upper_bound, max_iteraciones, w, c1, c2, aristas)
+    pso = PSO(funcion_objetivo=funcion_objetivo, num_particulas=tamanio_poblacion, dimension=num_vertices,
+              LB=lower_bound, UB=upper_bound, max_iter=max_iteraciones, w=w, c1=c1, c2=c2, aristas=aristas)
 
     mejor_sol, mejor_valor, tiempo = pso.optimizar()
 
-    print("\nMejor solución encontrada (binaria):", mejor_sol)
+    # Resultado final
+    print("\nMejor solución encontrada:", mejor_sol)
     print("Vértices seleccionados:", [i + 1 for i, v in enumerate(mejor_sol) if v == 1])
-    print("Valor de la función objetivo:", mejor_valor)
-    print("Tiempo de ejecución:", tiempo, "[s]")
+    print("Cobertura de vértices:", mejor_valor)
+
+    print(f"\nMejor solución encontrada en iteración {pso.iteracion_mejor} \nMejor solución encontrada en el tiempo: {pso.tiempo_mejor} segundos")
+
+    print("\nTiempo de ejecución total:", tiempo, "[s]\n")
+
+    # Grafica de convergencia
+    plt.plot(pso.historial_convergencia)
+    plt.title('Convergencia del algoritmo PSO')
+    plt.xlabel('Iteraciones')
+    plt.ylabel('Valor de la función objetivo')
+    plt.show()
