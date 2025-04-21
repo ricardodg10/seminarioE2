@@ -126,14 +126,19 @@ class PSO:
 
 '''Main'''
 if __name__ == "__main__":
-    ruta_b1 = "C:/Users/ricar/OneDrive/Escritorio/seminario/benchmark/C125-9.mtx"
-    ruta_b2 = "C:/Users/ricar/OneDrive/Escritorio/seminario/benchmark/keller4.mtx"
-    ruta_b3 = "C:/Users/ricar/OneDrive/Escritorio/seminario/benchmark/keller5.mtx"
+    benchmark_var = 3
 
-    num_vertices = leer_vertices(ruta_b3) 
-    aristas = leer_aristas(ruta_b3)
+    if(benchmark_var==1):
+        ruta_archivo = "C:/Users/ricar/OneDrive/Escritorio/seminario/benchmark/C125-9.mtx"
+    elif(benchmark_var==2):
+        ruta_archivo = "C:/Users/ricar/OneDrive/Escritorio/seminario/benchmark/keller4.mtx"
+    else:
+        ruta_archivo = "C:/Users/ricar/OneDrive/Escritorio/seminario/benchmark/keller5.mtx"
 
-    tamanio_poblacion = 5
+    num_vertices = leer_vertices(ruta_archivo) 
+    aristas = leer_aristas(ruta_archivo)
+
+    tamanio_poblacion = 10
     lower_bound = -6
     upper_bound = 6
     max_iteraciones = 100
@@ -141,8 +146,7 @@ if __name__ == "__main__":
     c1 = 2
     c2 = 2
 
-    pso = PSO(funcion_objetivo=funcion_objetivo, num_particulas=tamanio_poblacion, dimension=num_vertices,
-              LB=lower_bound, UB=upper_bound, max_iter=max_iteraciones, w=w, c1=c1, c2=c2, aristas=aristas)
+    pso = PSO(funcion_objetivo=funcion_objetivo, num_particulas=tamanio_poblacion, dimension=num_vertices, LB=lower_bound, UB=upper_bound, max_iter=max_iteraciones, w=w, c1=c1, c2=c2, aristas=aristas)
 
     mejor_sol, mejor_valor, tiempo = pso.optimizar()
 
@@ -154,6 +158,16 @@ if __name__ == "__main__":
     print(f"\nMejor solución encontrada en iteración {pso.iteracion_mejor} \nMejor solución encontrada en el tiempo: {pso.tiempo_mejor} segundos")
 
     print("\nTiempo de ejecución total:", tiempo, "[s]\n")
+
+    if(benchmark_var == 1):
+        with open('C:/Users/ricar/OneDrive/Escritorio/seminario/resultados/pso/c125-9/resultados-c125-9.txt', 'a') as file:
+            file.write(f"{pso.mejor_valor} - {pso.tiempo_mejor} - {tiempo}\n")
+    elif(benchmark_var == 2):
+        with open('C:/Users/ricar/OneDrive/Escritorio/seminario/resultados/pso/keller4/resultados-keller4.txt', 'a') as file:
+            file.write(f"{pso.mejor_valor} - {pso.tiempo_mejor} - {tiempo}\n")
+    else:
+        with open('C:/Users/ricar/OneDrive/Escritorio/seminario/resultados/pso/keller5/resultados-keller5.txt', 'a') as file:
+            file.write(f"{pso.mejor_valor} - {pso.tiempo_mejor} - {tiempo}\n")
 
     # Grafica de convergencia
     plt.plot(pso.historial_convergencia)

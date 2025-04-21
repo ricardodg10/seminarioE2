@@ -161,16 +161,20 @@ class GA:
 
 if __name__ == "__main__":
 
-    # benchmarks
-    ruta_b1 = "C:/Users/ricar/OneDrive/Escritorio/seminario/benchmark/C125-9.mtx"
-    ruta_b2 = "C:/Users/ricar/OneDrive/Escritorio/seminario/benchmark/keller4.mtx"
-    ruta_b3 = "C:/Users/ricar/OneDrive/Escritorio/seminario/benchmark/keller5.mtx"
+    benchmark_var = 3
+    
+    if(benchmark_var==1):
+        ruta_archivo = "C:/Users/ricar/OneDrive/Escritorio/seminario/benchmark/C125-9.mtx"
+    elif(benchmark_var==2):
+        ruta_archivo = "C:/Users/ricar/OneDrive/Escritorio/seminario/benchmark/keller4.mtx"
+    else:
+        ruta_archivo = "C:/Users/ricar/OneDrive/Escritorio/seminario/benchmark/keller5.mtx"
 
-    cantidad_vertices = leer_vertices(ruta_b3)  
-    aristas = leer_aristas(ruta_b3)  
+    cantidad_vertices = leer_vertices(ruta_archivo)  
+    aristas = leer_aristas(ruta_archivo)  
 
-    tamanio_poblacion = 5
-    longitud_cromosoma = cantidad_vertices  # Número de vértices
+    tamanio_poblacion = 10
+    longitud_cromosoma = cantidad_vertices  
     max_iteraciones = 100
     prob_cruce = 0.8
     prob_mutacion = 0.07
@@ -187,7 +191,17 @@ if __name__ == "__main__":
 
     print("\nTiempo de ejecución total:", tiempo, "[s]\n")
 
-    # Mostrar la gráfica de convergencia
+    if(benchmark_var == 1):
+        with open('C:/Users/ricar/OneDrive/Escritorio/seminario/resultados/ga/c125-9/resultados-c125-9.txt', 'a') as file:
+            file.write(f"{funcion_objetivo(ga.mejor_cromosoma.solucion)} - {ga.tiempo_mejor} - {tiempo}\n")
+    elif(benchmark_var == 2):
+        with open('C:/Users/ricar/OneDrive/Escritorio/seminario/resultados/ga/keller4/resultados-keller4.txt', 'a') as file:
+            file.write(f"{funcion_objetivo(ga.mejor_cromosoma.solucion)} - {ga.tiempo_mejor} - {tiempo}\n")
+    else:
+        with open('C:/Users/ricar/OneDrive/Escritorio/seminario/resultados/ga/keller5/resultados-keller5.txt', 'a') as file:
+            file.write(f"{funcion_objetivo(ga.mejor_cromosoma.solucion)} - {ga.tiempo_mejor} - {tiempo}\n")
+
+    # Gráfica de convergencia
     plt.plot(ga.historial_convergencia)
     plt.title('Convergencia del algoritmo GA')
     plt.xlabel('Iteraciones')
