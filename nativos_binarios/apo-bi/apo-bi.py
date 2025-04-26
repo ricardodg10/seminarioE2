@@ -236,7 +236,7 @@ class APO:
 # ejecución principal
 if __name__ == "__main__":
 
-    benchmark_var = 3   
+    benchmark_var = 2  
 
     if(benchmark_var==1):
         ruta_archivo = "C:/Users/ricar/OneDrive/Escritorio/seminario/benchmark/C125-9.mtx"

@@ -21,6 +21,11 @@ def leer_aristas(mtx_file):
             aristas.append((v1, v2))  # Pareja de vértices (arista)
     return aristas
 
+# función de guardar la ejecución (iteración, fitness)
+def guardar_resultados(ruta_archivo, iteracion, fitness):
+    with open(ruta_archivo, 'a') as f:
+        f.write(f"{iteracion} - {fitness}\n")
+
 '''Función S-shape'''
 # función sigmoide
 def s1(v):
@@ -116,6 +121,7 @@ class PSO:
                 particula.actualizar_velocidad(self.mejor_global, self.w, self.c1, self.c2)
                 particula.actualizar_posicion()
 
+            guardar_resultados("C:/Users/ricar/OneDrive/Escritorio/seminario/resultados/pso/keller5/pso_ejecucion.txt", t, sum(self.mejor_global))
             
             self.historial_convergencia.append(self.mejor_valor)
             print(f"Iteración {t} - Vértices cubiertos (g_best) {sum(self.mejor_global)}")

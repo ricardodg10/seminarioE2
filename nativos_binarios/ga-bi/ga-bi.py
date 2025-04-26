@@ -9,6 +9,11 @@ def leer_vertices(mtx_file):
         num_vertices, _, _ = map(int, lines[1].split())  # Número de vértices
     return num_vertices
 
+# función de guardar la ejecución (iteración, fitness)
+def guardar_resultados(ruta_archivo, iteracion, fitness):
+    with open(ruta_archivo, 'a') as f:
+        f.write(f"{iteracion} - {fitness}\n")
+
 # función para leer las aristas del archivo .mtx
 def leer_aristas(mtx_file):
     aristas = []
@@ -153,6 +158,9 @@ class GA:
                 self.tiempo_mejor = time.time() - tiempo_inicio
 
             self.historial_convergencia.append(funcion_objetivo(self.mejor_cromosoma.solucion))  # Guardar el valor de la función objetivo
+
+            guardar_resultados("C:/Users/ricar/OneDrive/Escritorio/seminario/resultados/ga/keller5/ga_ejecucion.txt", t, funcion_objetivo(self.mejor_cromosoma.solucion))
+
             print(f"Iteración {t} - Vértices cubiertos (g_best) {funcion_objetivo(self.mejor_cromosoma.solucion)}")
 
         tiempo_total = time.time() - tiempo_inicio
@@ -161,7 +169,7 @@ class GA:
 
 if __name__ == "__main__":
 
-    benchmark_var = 3
+    benchmark_var = 2
     
     if(benchmark_var==1):
         ruta_archivo = "C:/Users/ricar/OneDrive/Escritorio/seminario/benchmark/C125-9.mtx"
